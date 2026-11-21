@@ -1,0 +1,122 @@
+name: Android debug APK
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: android-debug-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  GODOT_VERSION: "4.7.2"
+  GODOT_STATUS: "stable"
+  # From https://github.com/godotengine/godot/releases/download/4.7.2-stable/SHA512-SUMS.txt
+  GODOT_LINUX_SHA512: "9aa00f7a605200940bce3027a567b782f49bd8e940dd06ae9e987bd65aee1b1467edd56ed84fcdcbdd44354bf613bdbb4e5d2913e925850368e150c59ed54c65"
+  GODOT_TEMPLATES_SHA512: "ca4d71c4d7b81dfc15d1a98baa07534aa95b03fdda78a0075b06672e1648d2e5f40980c9adc28d23e1b92e732ee7bf3461997aa804af74ec2fcd7a93ccb84079"
+  JAVA_VERSION: "17"
+  # Godot 4.7.2 targets SDK 36 and prefers the matching build-tools for apksigner.
+  ANDROID_BUILD_TOOLS: "36.0.0"
+  EXPORT_PRESET: "Android Debug"
+  APK_PATH: "build/android/logica-debug.apk"
+
+jobs:
+  build-android-debug:
+    name: Build debug APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up JDK
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: platform-tools build-tools;${{ env.ANDROID_BUILD_TOOLS }}
+          log-accepted-android-sdk-licenses: false
+
+      - name: Restore Godot and export templates
+        id: godot-cache
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/godot-bin
+            ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.${{ env.GODOT_STATUS }}
+          key: godot-${{ env.GODOT_VERSION }}-${{ env.GODOT_STATUS }}-android-${{ env.GODOT_LINUX_SHA512 }}
+
+      - name: Install Godot and Android export templates
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: bash .github/scripts/install_godot.sh
+
+      - name: Add Godot to PATH
+        run: |
+          echo "${HOME}/godot-bin" >> "${GITHUB_PATH}"
+          echo "DEBUG_KEYSTORE_PATH=${HOME}/.android-debug/logica-debug.keystore" >> "${GITHUB_ENV}"
+
+      - name: Restore debug keystore
+        uses: actions/cache@v6
+        with:
+          path: ~/.android-debug
+          key: logica-debug-keystore-v1
+
+      - name: Prepare debug keystore
+        run: bash .github/scripts/create_debug_keystore.sh
+
+      - name: Show toolchain
+        run: |
+          godot --headless --version
+          java -version
+          echo "ANDROID_HOME=${ANDROID_HOME}"
+          ls "${ANDROID_HOME}/build-tools"
+
+      - name: Import project resources
+        run: |
+          mkdir -p build/logs
+          godot --headless --path . --import 2>&1 | tee build/logs/import.log
+
+      - name: Smoke-run boot scene (headless)
+        run: |
+          godot --headless --path . --quit-after 120 2>&1 | tee build/logs/smoke.log
+          bash .github/scripts/check_godot_log.sh build/logs/smoke.log "LOGICA boot ok"
+
+      - name: Export debug APK
+        run: |
+          mkdir -p "$(dirname "${APK_PATH}")"
+          godot --headless --path . --export-debug "${EXPORT_PRESET}" "${APK_PATH}" 2>&1 | tee build/logs/export.log
+          test -s "${APK_PATH}" || { echo "APK was not produced" >&2; exit 1; }
+
+      - name: Verify APK signature
+        run: |
+          apksigner="$(ls -d "${ANDROID_HOME}/build-tools/${ANDROID_BUILD_TOOLS}")/apksigner"
+          "${apksigner}" verify --verbose "${APK_PATH}"
+          ls -l "${APK_PATH}"
+          sha256sum "${APK_PATH}" | tee build/logs/apk.sha256
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: logica-debug-apk-${{ github.run_number }}
+          path: ${{ env.APK_PATH }}
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: logica-build-logs-${{ github.run_number }}
+          path: build/logs/
+          if-no-files-found: ignore
+          retention-days: 14
