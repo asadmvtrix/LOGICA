@@ -9,6 +9,11 @@ func before_each() -> void:
 	router.route_changed.connect(func(route: StringName, direction: int) -> void: events.append([route, direction]))
 
 
+func after_each() -> void:
+	# The connected lambda references this test case; drop the router to break the cycle.
+	router = null
+
+
 func test_first_tab_selection_emits_replace() -> void:
 	router.select_tab(Routes.HOME)
 	assert_eq(router.current(), Routes.HOME)

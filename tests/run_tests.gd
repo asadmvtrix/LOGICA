@@ -7,8 +7,19 @@ extends SceneTree
 const TEST_DIR := "res://tests/unit"
 const PASS_MARKER := "ALL TESTS PASSED"
 
+var _started := false
 
-func _initialize() -> void:
+
+# Tests run on the first frame rather than in _initialize(), because nodes added
+# to the root before the main loop starts do not receive _ready().
+func _process(_delta: float) -> bool:
+	if not _started:
+		_started = true
+		_run_all()
+	return false
+
+
+func _run_all() -> void:
 	var total := 0
 	var failed := 0
 
