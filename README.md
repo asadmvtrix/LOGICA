@@ -2,7 +2,7 @@
 
 An original collection of logic puzzles for Android, built with **Godot 4.7.2** and **GDScript**.
 
-This repository currently contains only the project foundation and a cloud APK pipeline. There is no gameplay yet. See `docs/IMPLEMENTATION_STATUS.md`.
+Current state: application shell with design system, navigation across all seven sections, settings persistence and automated tests. Puzzle gameplay starts in Phase 2. See `docs/IMPLEMENTATION_STATUS.md`.
 
 ## Local machine requirements
 
@@ -13,12 +13,13 @@ You need only Cursor (or any editor), Git and a web browser. You do not need to 
 ```
 project.godot              Godot project settings (portrait, GL Compatibility renderer)
 export_presets.cfg         Android export preset "Android Debug"
-icon.svg                   Original placeholder app icon
-scenes/boot/boot.tscn      Foundation boot scene (replaced in Phase 1)
-scripts/boot/boot.gd       Boot script; prints "LOGICA boot ok" for CI smoke checks
+icon.svg                   Placeholder app icon
+scenes/app/app.tscn        Main scene
+scripts/                   Game code (see docs/ARCHITECTURE.md)
+tests/                     Headless test runner, tests and screenshot capture
 .github/workflows/android-debug.yml   Cloud build pipeline
 .github/scripts/           Shell scripts used by the pipeline
-docs/                      Audit, architecture, status, test and planning documents
+docs/                      Audit, architecture, design system, status, tests, issues, next steps
 ```
 
 ## Cloud build pipeline
@@ -32,14 +33,16 @@ Workflow: `.github/workflows/android-debug.yml`, runner `ubuntu-24.04`.
 | Godot | Downloads the Godot 4.7.2 Linux editor and export templates from the official GitHub release, checks pinned SHA-512 checksums, and keeps only the Android templates. Cached between runs. |
 | Keystore | Generates a debug keystore (standard `android` debug password) and caches it so successive debug APKs share a signature |
 | Import | `godot --headless --import` |
-| Smoke run | Runs the boot scene headless and fails on GDScript errors or if `LOGICA boot ok` is missing |
+| Tests | `tests/run_tests.gd` headless; fails on any failed test or GDScript error |
+| Smoke run | Runs the main scene headless and fails on GDScript errors or if `LOGICA boot ok` is missing |
+| Screenshots | Renders every screen under a virtual display (`xvfb-run`) for visual review; does not block the build |
 | Export | `godot --headless --export-debug "Android Debug"` (non-Gradle export using the prebuilt template) |
 | Verify | `apksigner verify` and SHA-256 of the APK |
-| Artifacts | `logica-debug-apk-<run number>` (the APK) and `logica-build-logs-<run number>` (logs), kept 14 days |
+| Artifacts | `logica-debug-apk-<n>` (the APK), `logica-screenshots-<n>` (PNG of each screen) and `logica-build-logs-<n>` (logs), kept 14 days |
 
 Pinned versions are in the workflow `env:` block. To upgrade Godot, change `GODOT_VERSION` and both SHA-512 values (from the release's `SHA512-SUMS.txt`), and update `config/features` in `project.godot`.
 
-APK contents: arm64-v8a and armeabi-v7a, package `dev.logica.puzzles` (placeholder; change it before any store release, because it cannot change after publishing).
+APK contents: arm64-v8a and armeabi-v7a, package `com.asadmvtrix.logica`. Note: this package name differs from the Phase 0 build (`dev.logica.puzzles`), so the two install side by side; uninstall the old one.
 
 ## Connecting to GitHub (one-time)
 
