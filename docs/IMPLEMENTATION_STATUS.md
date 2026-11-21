@@ -1,18 +1,25 @@
 # Implementation Status
 
+Version 0.3.0.
+
 | Area | Status |
 |---|---|
-| Phase 0: environment audit, project foundation, cloud APK pipeline | Done; APK installed and launched on the owner's device |
-| Phase 1: design tokens and generated theme | Done, tested (contrast, spacing, touch targets, theme variations) |
-| Phase 1: reusable UI components | Done: row, toggle row, info row, row group, empty state, header, back button, tab bar |
-| Phase 1: navigation (router, screen host, tab bar, Android back) | Done, tested (router unit tests and app-shell integration tests). Android back gesture not yet checked on a device |
-| Phase 1: application shell, all seven sections reachable | Done. Home, Journey, Daily, Training, Challenges, Statistics and Settings open. Content sections show empty states until their phases |
-| Phase 1: settings persistence (reduce motion) | Done, tested (round trip, corrupt file, backup recovery, wrong types) |
-| Phase 1: safe-area handling | Implemented, math unit-tested; not yet checked on a device with a cutout |
-| Loading and error states | Not needed yet (no asynchronous loading); settings load errors fall back to defaults with a warning |
-| Phase 2: core gameplay (board framework, Queens) | Not started |
-| Phase 3: hint engine | Not started |
-| Phase 4: Tango, Shikaku, Sudoku | Not started |
-| Phase 5: progression, statistics, persistence of progress | Not started |
-| Phase 6: polish (animations, audio, haptics) | Not started; screen transitions and switch animation exist |
-| Phase 7: QA and release | Not started |
+| Phase 0: foundation and cloud APK pipeline | Done; APK installed on the owner's device |
+| Phase 1: design tokens, theme, components, navigation, settings | Done, tested |
+| Design refresh | Done: bundled Fraunces (display) and Inter (interface), a colour per mode, drawn board previews, card-based Home, Journey grid, Daily cards |
+| Gameplay framework | Done: channels, undo/redo, batched drags, undoable reset, save/load, board view with touch, drag, hint highlights and completion wave |
+| Queens | Done: model, rules, exhaustive solver, 5-technique logic, generator, controller, hints, board |
+| Tango | Done: model, rules, solver, 6-technique logic (including line analysis and contradiction), generator with = / × clues, controller, hints, board |
+| Shikaku | Done: model, rules, solver, 4-technique logic, generator, drag-to-draw controller, hints, board |
+| Sudoku | Done: model, rules, solver, singles / pointing / claiming / pairs, generator, notes, number pad, hints, board |
+| Hints (Reveal and Explain) | Done for all modes; unlimited; corrections for wrong entries; explicit "no hint" result |
+| Gameplay screen | Done: background generation, timer, pause, start over, completion summary, next level, autosave and resume |
+| Journey | Done: 60 levels per mode in four difficulty bands, unlocked in order |
+| Daily | Done: four puzzles per date from the date key; difficulty by weekday; streak |
+| Training | Done: per-mode lesson (rules and techniques) and a practice puzzle |
+| Challenges | Done: eight fixed challenges with time / no-hint / no-mistake goals |
+| Statistics | Done: totals, per-mode solved, best time per difficulty, journey position, hints used |
+| Settings | Done: timer, haptics, reduce motion |
+| Audio | Not started |
+| Device checks: back gesture, safe area with cutout, haptics | Pending on a real device |
+| Release signing and store build | Not started (debug APK only) |

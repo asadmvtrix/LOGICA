@@ -169,8 +169,12 @@ func _draw() -> void:
 	_draw_overlay()
 	for i in game.cell_count():
 		_draw_cell(i, cell_rect(i))
-	for i in hint_focus:
-		draw_rect(cell_rect(i).grow(-DesignTokens.BOARD_LINE * 2), DesignTokens.COLOR_HINT_FOCUS, false, DesignTokens.BOARD_LINE_STRONG)
+	if hint_focus.size() > 4:
+		for i in hint_focus:
+			draw_rect(cell_rect(i), Color(DesignTokens.COLOR_HINT_FOCUS, 0.24))
+	else:
+		for i in hint_focus:
+			draw_rect(cell_rect(i).grow(-DesignTokens.BOARD_LINE * 2), DesignTokens.COLOR_HINT_FOCUS, false, DesignTokens.BOARD_LINE_STRONG)
 	if _wave >= 0.0:
 		_draw_wave()
 	draw_rect(board, DesignTokens.COLOR_BOARD_LINE_STRONG, false, DesignTokens.BOARD_LINE_STRONG)

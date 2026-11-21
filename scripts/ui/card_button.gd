@@ -21,15 +21,21 @@ func _init(padding: int = DesignTokens.SPACE_L) -> void:
 	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	content.add_theme_constant_override(&"separation", DesignTokens.SPACE_XS)
 	_margin.add_child(content)
-	_margin.minimum_size_changed.connect(update_minimum_size)
-
-
-func _get_minimum_size() -> Vector2:
-	return _margin.get_combined_minimum_size()
+	# Button computes its own minimum size natively (a script override is
+	# ignored), so the content height is copied into custom_minimum_size.
+	_margin.minimum_size_changed.connect(_sync_minimum_size)
+	resized.connect(_sync_minimum_size)
 
 
 func _ready() -> void:
 	_ignore_mouse(content)
+	_sync_minimum_size()
+
+
+func _sync_minimum_size() -> void:
+	var needed := _margin.get_combined_minimum_size().y
+	if not is_equal_approx(custom_minimum_size.y, needed):
+		custom_minimum_size.y = needed
 
 
 static func _ignore_mouse(node: Node) -> void:
