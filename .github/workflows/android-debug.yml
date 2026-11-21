@@ -86,7 +86,12 @@ jobs:
           mkdir -p build/logs
           godot --headless --path . --import 2>&1 | tee build/logs/import.log
 
-      - name: Smoke-run boot scene (headless)
+      - name: Run unit and integration tests
+        run: |
+          godot --headless --path . --script res://tests/run_tests.gd 2>&1 | tee build/logs/tests.log
+          bash .github/scripts/check_godot_log.sh build/logs/tests.log "ALL TESTS PASSED"
+
+      - name: Smoke-run main scene (headless)
         run: |
           godot --headless --path . --quit-after 120 2>&1 | tee build/logs/smoke.log
           bash .github/scripts/check_godot_log.sh build/logs/smoke.log "LOGICA boot ok"
