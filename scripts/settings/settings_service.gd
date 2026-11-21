@@ -8,8 +8,17 @@ signal changed(key: StringName)
 
 const SAVE_VERSION := 1
 const KEY_REDUCED_MOTION := &"reduced_motion"
+const KEY_HAPTICS := &"haptics"
+const KEY_SHOW_TIMER := &"show_timer"
+const DEFAULTS := {
+	KEY_REDUCED_MOTION: false,
+	KEY_HAPTICS: true,
+	KEY_SHOW_TIMER: true,
+}
 
 var reduced_motion := false
+var haptics := true
+var show_timer := true
 var load_status: StringName = &""
 
 var _store: JsonFileStore
@@ -31,24 +40,42 @@ func load_settings() -> void:
 		load_status = JsonFileStore.STATUS_CORRUPT
 		push_warning("Settings file has no data section; using defaults.")
 		return
-	var stored_reduced_motion: Variant = data.get(String(KEY_REDUCED_MOTION))
-	if stored_reduced_motion is bool:
-		reduced_motion = stored_reduced_motion
+	for key: StringName in DEFAULTS:
+		var stored: Variant = data.get(String(key))
+		if stored is bool:
+			set(key, stored)
 
 
 func set_reduced_motion(value: bool) -> void:
-	if value == reduced_motion:
+	_set_flag(KEY_REDUCED_MOTION, value)
+
+
+func set_haptics(value: bool) -> void:
+	_set_flag(KEY_HAPTICS, value)
+
+
+func set_show_timer(value: bool) -> void:
+	_set_flag(KEY_SHOW_TIMER, value)
+
+
+## Short vibration for placements, when enabled and supported.
+func tap_feedback() -> void:
+	if haptics and OS.has_feature("mobile"):
+		Input.vibrate_handheld(12)
+
+
+func _set_flag(key: StringName, value: bool) -> void:
+	if get(key) == value:
 		return
-	reduced_motion = value
+	set(key, value)
 	_save()
-	changed.emit(KEY_REDUCED_MOTION)
+	changed.emit(key)
 
 
 func _save() -> void:
-	var envelope := {
-		"version": SAVE_VERSION,
-		"data": {String(KEY_REDUCED_MOTION): reduced_motion},
-	}
-	var error := _store.write(envelope)
+	var data := {}
+	for key: StringName in DEFAULTS:
+		data[String(key)] = get(key)
+	var error := _store.write({"version": SAVE_VERSION, "data": data})
 	if error != OK:
 		push_error("Saving settings failed: %s" % error_string(error))

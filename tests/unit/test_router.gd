@@ -64,6 +64,19 @@ func test_back_at_home_root_returns_false() -> void:
 	assert_eq(router.current(), Routes.HOME)
 
 
+func test_push_carries_params_and_back_restores() -> void:
+	router.select_tab(Routes.HOME)
+	router.push(Routes.LESSON, &"tango")
+	assert_eq(router.current_params(), &"tango")
+	router.push(Routes.PLAY, "first")
+	router.replace(Routes.PLAY, "second")
+	assert_eq(router.depth(), 3)
+	assert_eq(router.current_params(), "second")
+	assert_true(router.back())
+	assert_eq(router.current(), Routes.LESSON)
+	assert_eq(router.current_params(), &"tango")
+
+
 func test_unknown_tab_is_rejected() -> void:
 	router.select_tab(Routes.TRAINING)
 	assert_eq(router.depth(), 0)

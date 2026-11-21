@@ -30,18 +30,35 @@ func test_interactive_elements_meet_minimum_touch_target() -> void:
 	assert_gte(DesignTokens.NAV_HEIGHT, DesignTokens.TOUCH_TARGET_MIN)
 
 
+func test_mode_colours_are_distinct_and_legible() -> void:
+	var seen := {}
+	for mode in PuzzleModes.ALL:
+		var color := DesignTokens.mode_color(mode)
+		assert_false(seen.has(color.to_html()), "unique colour for %s" % mode)
+		seen[color.to_html()] = true
+		# Used for captions and large numerals: WCAG AA for large text / UI parts.
+		assert_gte(_contrast(color, DesignTokens.COLOR_SURFACE), 3.0, String(mode))
+
+
+func test_bundled_fonts_load() -> void:
+	assert_true(load(DesignTokens.FONT_UI_PATH) is Font, "Inter")
+	assert_true(load(DesignTokens.FONT_DISPLAY_PATH) is Font, "Fraunces")
+
+
 func test_theme_defines_every_variation_used_by_components() -> void:
 	var theme := ThemeFactory.build()
 	for variation in [
-		ThemeFactory.LABEL_WORDMARK, ThemeFactory.LABEL_HEADLINE, ThemeFactory.LABEL_TITLE,
-		ThemeFactory.LABEL_SECONDARY, ThemeFactory.LABEL_CAPTION,
+		ThemeFactory.LABEL_WORDMARK, ThemeFactory.LABEL_HEADLINE, ThemeFactory.LABEL_TITLE, ThemeFactory.LABEL_NUMERAL,
+		ThemeFactory.LABEL_STRONG, ThemeFactory.LABEL_SECONDARY, ThemeFactory.LABEL_CAPTION,
 	]:
 		assert_eq(theme.get_type_variation_base(variation), &"Label", str(variation))
 	for variation in [
-		ThemeFactory.BUTTON_ROW, ThemeFactory.BUTTON_ICON, ThemeFactory.BUTTON_NAV, ThemeFactory.BUTTON_NAV_ACTIVE,
+		ThemeFactory.BUTTON_PRIMARY, ThemeFactory.BUTTON_SECONDARY, ThemeFactory.BUTTON_TOOL, ThemeFactory.BUTTON_ROW,
+		ThemeFactory.BUTTON_TILE, ThemeFactory.BUTTON_ICON, ThemeFactory.BUTTON_NAV, ThemeFactory.BUTTON_NAV_ACTIVE,
 	]:
 		assert_eq(theme.get_type_variation_base(variation), &"Button", str(variation))
-	assert_eq(theme.get_type_variation_base(ThemeFactory.PANEL_NAV_BAR), &"PanelContainer")
+	for variation in [ThemeFactory.PANEL_NAV_BAR, ThemeFactory.PANEL_SHEET, ThemeFactory.PANEL_CARD]:
+		assert_eq(theme.get_type_variation_base(variation), &"PanelContainer", str(variation))
 
 
 static func _contrast(a: Color, b: Color) -> float:

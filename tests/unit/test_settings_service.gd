@@ -41,6 +41,19 @@ func test_change_emits_signal_once() -> void:
 	assert_eq(keys, [SettingsService.KEY_REDUCED_MOTION])
 
 
+func test_all_flags_persist() -> void:
+	var settings := SettingsService.new(store)
+	assert_true(settings.haptics)
+	assert_true(settings.show_timer)
+	settings.set_haptics(false)
+	settings.set_show_timer(false)
+	var reloaded := SettingsService.new(store)
+	reloaded.load_settings()
+	assert_false(reloaded.haptics)
+	assert_false(reloaded.show_timer)
+	assert_false(reloaded.reduced_motion)
+
+
 func test_wrong_value_type_is_ignored() -> void:
 	store.write({"version": 1, "data": {"reduced_motion": "yes"}})
 	var settings := SettingsService.new(store)
