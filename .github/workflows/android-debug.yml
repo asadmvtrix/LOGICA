@@ -96,6 +96,23 @@ jobs:
           godot --headless --path . --quit-after 120 2>&1 | tee build/logs/smoke.log
           bash .github/scripts/check_godot_log.sh build/logs/smoke.log "LOGICA boot ok"
 
+      - name: Capture screen screenshots (virtual display)
+        continue-on-error: true
+        run: |
+          mkdir -p build/screenshots
+          xvfb-run -a -s "-screen 0 1080x2400x24" \
+            godot --path . --rendering-driver opengl3 --resolution 1080x2400 \
+            --script res://tests/capture_screenshots.gd -- "${PWD}/build/screenshots" 2>&1 | tee build/logs/screenshots.log
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: logica-screenshots-${{ github.run_number }}
+          path: build/screenshots/
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Export debug APK
         run: |
           mkdir -p "$(dirname "${APK_PATH}")"
