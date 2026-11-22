@@ -329,7 +329,13 @@ func _frame_padding() -> float:
 
 
 func _draw_frame_border(board: Rect2) -> void:
-	draw_rect(board, DesignTokens.COLOR_BOARD_LINE_STRONG, false, DesignTokens.BOARD_LINE_STRONG)
+	var border := StyleBoxFlat.new()
+	border.draw_center = false
+	border.anti_aliasing = true
+	border.set_corner_radius_all(DesignTokens.RADIUS_S)
+	border.set_border_width_all(int(DesignTokens.BOARD_LINE_STRONG * 0.8))
+	border.border_color = Color(DesignTokens.COLOR_BOARD_LINE_STRONG, 0.85)
+	draw_style_box(border, board.grow(2.0))
 
 
 func _draw_cell_background(index: int, rect: Rect2) -> void:

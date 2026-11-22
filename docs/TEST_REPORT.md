@@ -2,6 +2,14 @@
 
 Tests run in CI with `godot --headless --path . --script res://tests/run_tests.gd`. The step fails if any test fails, if no tests are found, or if the log contains a GDScript runtime error (the log check is needed because a test that crashes would otherwise only abort silently).
 
+## 2026-11-22: 0.4.0 (Queens auto-cross, board animation, game-style UI)
+
+CI run [45001380101](https://github.com/asadmvtrix/LOGICA/actions/runs/45001380101): **77 tests, 0 failed**, smoke run passed, APK exported and signature verified.
+
+New in `test_queens` (13 tests): placing a queen auto-crosses exactly the cells it attacks without storing marks, and the crosses leave with the queen; tapping an auto-crossed cell places a queen; auto-cross off shows nothing; Explain skips the "ruled out by queens" step when auto-cross is on and includes it when off. Solving with hints alone now runs with auto-cross on.
+
+Animations (pop, shake, unit flash, ripple, confetti, sheet slide, press scale, screen fade) are not covered by automated tests; screenshots render with reduced motion. Not yet verified on a device: 0.4.0.
+
 ## 2026-11-21: 0.3.0 (all four modes, hints, progression, redesign)
 
 CI run [44936997740](https://github.com/asadmvtrix/LOGICA/actions/runs/44936997740): **73 tests, 0 failed**, smoke run passed, APK exported and signature verified.
