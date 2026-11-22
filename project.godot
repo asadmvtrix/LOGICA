@@ -7,7 +7,7 @@ config_version=5
 
 config/name="LOGICA"
 config/description="A collection of original logic puzzles."
-config/version="0.3.0"
+config/version="0.4.0"
 run/main_scene="res://scenes/app/app.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"

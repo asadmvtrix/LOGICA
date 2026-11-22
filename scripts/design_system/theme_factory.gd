@@ -82,9 +82,7 @@ static func _label_variation(theme: Theme, type: StringName, font: Font, font_si
 
 
 static func _add_buttons(theme: Theme, ui_medium: Font, ui_semibold: Font) -> void:
-	var normal := _flat(DesignTokens.COLOR_SURFACE, DesignTokens.RADIUS_S)
-	normal.set_border_width_all(DesignTokens.HAIRLINE)
-	normal.border_color = DesignTokens.COLOR_SEPARATOR
+	var normal := raised(DesignTokens.COLOR_SURFACE, DesignTokens.RADIUS_M)
 	normal.set_content_margin_all(DesignTokens.SPACE_S)
 	var pressed := normal.duplicate() as StyleBoxFlat
 	pressed.bg_color = DesignTokens.COLOR_SURFACE_SUNKEN
@@ -92,8 +90,10 @@ static func _add_buttons(theme: Theme, ui_medium: Font, ui_semibold: Font) -> vo
 	theme.set_font(&"font", &"Button", ui_medium)
 	_button_font_colors(theme, &"Button", DesignTokens.COLOR_INK, DesignTokens.COLOR_INK)
 
-	var primary := _flat(DesignTokens.COLOR_INK, DesignTokens.RADIUS_S)
+	var primary := _flat(DesignTokens.COLOR_INK, DesignTokens.RADIUS_PILL)
 	primary.set_content_margin_all(DesignTokens.SPACE_S)
+	primary.content_margin_left = DesignTokens.SPACE_L
+	primary.content_margin_right = DesignTokens.SPACE_L
 	var primary_pressed := primary.duplicate() as StyleBoxFlat
 	primary_pressed.bg_color = DesignTokens.COLOR_INK.lightened(0.2)
 	_button_variation(theme, BUTTON_PRIMARY, primary, primary_pressed)
@@ -114,9 +114,7 @@ static func _add_buttons(theme: Theme, ui_medium: Font, ui_semibold: Font) -> vo
 	row_pressed.expand_margin_right = DesignTokens.SPACE_S
 	_button_variation(theme, BUTTON_ROW, StyleBoxEmpty.new(), row_pressed)
 
-	var tile := _flat(DesignTokens.COLOR_SURFACE, DesignTokens.RADIUS_S)
-	tile.set_border_width_all(DesignTokens.HAIRLINE)
-	tile.border_color = DesignTokens.COLOR_SEPARATOR
+	var tile := raised(DesignTokens.COLOR_SURFACE, DesignTokens.RADIUS_M)
 	var tile_pressed := tile.duplicate() as StyleBoxFlat
 	tile_pressed.bg_color = DesignTokens.COLOR_SURFACE_SUNKEN
 	_button_variation(theme, BUTTON_TILE, tile, tile_pressed)
@@ -164,17 +162,19 @@ static func _add_containers(theme: Theme) -> void:
 	theme.set_stylebox(&"separator", &"HSeparator", line)
 	theme.set_constant(&"separation", &"HSeparator", DesignTokens.HAIRLINE)
 
-	var nav_bar := _flat(DesignTokens.COLOR_BACKGROUND, 0)
-	nav_bar.border_width_top = DesignTokens.HAIRLINE
-	nav_bar.border_color = DesignTokens.COLOR_SEPARATOR
+	var nav_bar := _flat(DesignTokens.COLOR_SURFACE, 0)
+	nav_bar.corner_radius_top_left = DesignTokens.RADIUS_L
+	nav_bar.corner_radius_top_right = DesignTokens.RADIUS_L
+	nav_bar.shadow_color = DesignTokens.COLOR_SHADOW
+	nav_bar.shadow_size = 24
 	theme.set_type_variation(PANEL_NAV_BAR, &"PanelContainer")
 	theme.set_stylebox(&"panel", PANEL_NAV_BAR, nav_bar)
 
 	var sheet := _flat(DesignTokens.COLOR_SURFACE, 0)
-	sheet.corner_radius_top_left = DesignTokens.RADIUS_M
-	sheet.corner_radius_top_right = DesignTokens.RADIUS_M
-	sheet.border_width_top = DesignTokens.HAIRLINE
-	sheet.border_color = DesignTokens.COLOR_SEPARATOR
+	sheet.corner_radius_top_left = DesignTokens.RADIUS_L
+	sheet.corner_radius_top_right = DesignTokens.RADIUS_L
+	sheet.shadow_color = Color(0, 0, 0, 0.18)
+	sheet.shadow_size = 30
 	sheet.content_margin_left = DesignTokens.PAGE_MARGIN
 	sheet.content_margin_right = DesignTokens.PAGE_MARGIN
 	sheet.content_margin_top = DesignTokens.SPACE_M
@@ -182,9 +182,7 @@ static func _add_containers(theme: Theme) -> void:
 	theme.set_type_variation(PANEL_SHEET, &"PanelContainer")
 	theme.set_stylebox(&"panel", PANEL_SHEET, sheet)
 
-	var card := _flat(DesignTokens.COLOR_SURFACE, DesignTokens.RADIUS_S)
-	card.set_border_width_all(DesignTokens.HAIRLINE)
-	card.border_color = DesignTokens.COLOR_SEPARATOR
+	var card := raised(DesignTokens.COLOR_SURFACE, DesignTokens.RADIUS_M)
 	card.set_content_margin_all(DesignTokens.SPACE_L)
 	theme.set_type_variation(PANEL_CARD, &"PanelContainer")
 	theme.set_stylebox(&"panel", PANEL_CARD, card)
@@ -197,6 +195,15 @@ static func _add_containers(theme: Theme) -> void:
 	theme.set_stylebox(&"grabber", &"VScrollBar", grabber)
 	theme.set_stylebox(&"grabber_highlight", &"VScrollBar", grabber)
 	theme.set_stylebox(&"grabber_pressed", &"VScrollBar", grabber)
+
+
+## Rounded surface with a soft drop shadow.
+static func raised(color: Color, radius: int) -> StyleBoxFlat:
+	var box := _flat(color, radius)
+	box.shadow_color = DesignTokens.COLOR_SHADOW
+	box.shadow_size = 14
+	box.shadow_offset = Vector2(0, 5)
+	return box
 
 
 static func _flat(color: Color, radius: int) -> StyleBoxFlat:

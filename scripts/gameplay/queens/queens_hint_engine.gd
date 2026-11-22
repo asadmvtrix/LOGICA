@@ -20,6 +20,10 @@ func _correction(game: PuzzleGame, kind: HintResult.Kind) -> HintResult:
 func _placement_chain(game: PuzzleGame) -> Array[Deduction]:
 	var queens := game as QueensGame
 	var logic := QueensLogic.from_cells(queens.puzzle, queens.channels[0])
+	if queens.auto_cross:
+		var shown := logic.queen_eliminations()
+		if shown != null:
+			logic.apply(shown)
 	var chain: Array[Deduction] = []
 	for i in MAX_CHAIN:
 		var deduction := logic.next_deduction()

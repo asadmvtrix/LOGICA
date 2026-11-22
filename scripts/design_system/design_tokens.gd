@@ -16,6 +16,10 @@ const COLOR_ACCENT := Color("#A84E2A")
 const COLOR_ERROR := Color("#B3261E")
 const COLOR_SUCCESS := Color("#4E7A4A")
 const COLOR_SCRIM := Color(0.133, 0.125, 0.114, 0.55)
+const COLOR_SHADOW := Color(0.25, 0.18, 0.1, 0.12)
+const COLOR_HERO := Color("#24211E")
+const COLOR_HERO_INK := Color("#F6F1E8")
+const COLOR_HERO_INK_SECONDARY := Color("#B9B1A4")
 
 # --- Colour: puzzle modes (one identity colour each) -----------------------
 const COLOR_MODE_QUEENS := Color("#A84E2A")
@@ -72,8 +76,10 @@ const SPACE_XXL := 96
 const PAGE_MARGIN := 60
 
 # --- Shape ----------------------------------------------------------------
-const RADIUS_S := 8
-const RADIUS_M := 16
+const RADIUS_S := 18
+const RADIUS_M := 30
+const RADIUS_L := 44
+const RADIUS_PILL := 999
 const HAIRLINE := 2
 const BOARD_LINE := 2
 const BOARD_LINE_STRONG := 5
@@ -115,3 +121,17 @@ static func mode_color(mode_id: StringName) -> Color:
 		&"sudoku":
 			return COLOR_MODE_SUDOKU
 	return COLOR_ACCENT
+
+
+## Light fill in the mode's hue, used for tiles and play backgrounds.
+static func mode_tint(mode_id: StringName) -> Color:
+	match mode_id:
+		&"queens":
+			return Color("#F4DCCB")
+		&"tango":
+			return Color("#CFE6E2")
+		&"shikaku":
+			return Color("#F2E3BE")
+		&"sudoku":
+			return Color("#DADFF1")
+	return COLOR_SURFACE_SUNKEN

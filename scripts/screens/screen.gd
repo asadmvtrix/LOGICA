@@ -5,6 +5,7 @@ extends Control
 
 var context: AppContext
 var route: StringName
+var _content: VBoxContainer
 
 
 func setup(p_context: AppContext, p_route: StringName) -> void:
@@ -67,7 +68,28 @@ func _make_page() -> MarginContainer:
 	var content := VBoxContainer.new()
 	content.add_theme_constant_override(&"separation", DesignTokens.SPACE_S)
 	page.add_child(content)
+	_content = content
 	return page
+
+
+## Content blocks fade in one after another, grid tiles included.
+func _ready() -> void:
+	if _content == null or context == null or context.settings.reduced_motion:
+		return
+	var items: Array[CanvasItem] = []
+	for child in _content.get_children():
+		if child is GridContainer:
+			for tile in child.get_children():
+				items.append(tile as CanvasItem)
+		elif child is CanvasItem:
+			items.append(child as CanvasItem)
+	if items.is_empty():
+		return
+	var tween := create_tween().set_parallel(true)
+	for i in items.size():
+		var item := items[i]
+		item.modulate.a = 0.0
+		tween.tween_property(item, "modulate:a", 1.0, 0.3).set_delay(minf(i * 0.04, 0.5)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 
 func _on_back_pressed() -> void:

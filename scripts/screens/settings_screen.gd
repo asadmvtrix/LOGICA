@@ -13,6 +13,7 @@ func _build() -> void:
 	content.add_child(play)
 	play.add_row(_toggle("Show timer", "Time each puzzle in the header", settings.show_timer, settings.set_show_timer))
 	play.add_row(_toggle("Haptics", "A light tap when you place a piece", settings.haptics, settings.set_haptics))
+	play.add_row(_toggle("Auto-cross", "Placing a queen crosses out every cell it rules out", settings.auto_cross, settings.set_auto_cross))
 
 	content.add_child(UiFactory.spacer(DesignTokens.SPACE_L))
 	content.add_child(UiFactory.caption("Display"))

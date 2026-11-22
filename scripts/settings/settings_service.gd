@@ -10,15 +10,18 @@ const SAVE_VERSION := 1
 const KEY_REDUCED_MOTION := &"reduced_motion"
 const KEY_HAPTICS := &"haptics"
 const KEY_SHOW_TIMER := &"show_timer"
+const KEY_AUTO_CROSS := &"auto_cross"
 const DEFAULTS := {
 	KEY_REDUCED_MOTION: false,
 	KEY_HAPTICS: true,
 	KEY_SHOW_TIMER: true,
+	KEY_AUTO_CROSS: true,
 }
 
 var reduced_motion := false
 var haptics := true
 var show_timer := true
+var auto_cross := true
 var load_status: StringName = &""
 
 var _store: JsonFileStore
@@ -56,6 +59,10 @@ func set_haptics(value: bool) -> void:
 
 func set_show_timer(value: bool) -> void:
 	_set_flag(KEY_SHOW_TIMER, value)
+
+
+func set_auto_cross(value: bool) -> void:
+	_set_flag(KEY_AUTO_CROSS, value)
 
 
 ## Short vibration for placements, when enabled and supported.

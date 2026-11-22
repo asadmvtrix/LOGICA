@@ -95,6 +95,60 @@ func test_wrong_queen_gets_a_correction_hint() -> void:
 	assert_eq(result.steps[0].focus, PackedInt32Array([wrong]))
 
 
+func _solution_queen(puzzle: QueensPuzzle) -> int:
+	return puzzle.solution[0]
+
+
+func test_auto_cross_follows_queens() -> void:
+	var puzzle := _puzzle("auto-cross")
+	var game := QueensGame.new(puzzle, 0, "auto-cross")
+	var queen := _solution_queen(puzzle)
+	game.cycle(queen)
+	game.cycle(queen)
+	assert_eq(game.value(queen), QueensRules.QUEEN)
+	var attacked := game.attacked_cells()
+	for cell in puzzle.size * puzzle.size:
+		var expected := 1 if cell != queen and QueensRules.attacks(puzzle.size, puzzle.regions, queen, cell) else 0
+		assert_eq(attacked[cell], expected, "cell %d" % cell)
+	var crossed := (queen + 1) % puzzle.size
+	assert_true(game.is_auto_crossed(crossed), "same row is crossed")
+	assert_eq(game.value(crossed), QueensRules.EMPTY, "crosses are not stored as marks")
+	assert_true(game.reset())
+	assert_false(game.is_auto_crossed(crossed), "crosses leave with the queen")
+
+
+func test_tap_on_auto_cross_places_a_queen() -> void:
+	var puzzle := _puzzle("auto-tap")
+	var game := QueensGame.new(puzzle, 0, "auto-tap")
+	var queen := _solution_queen(puzzle)
+	game.apply([[0, queen, QueensRules.QUEEN]])
+	var crossed := (queen + 1) % puzzle.size
+	game.cycle(crossed)
+	assert_eq(game.value(crossed), QueensRules.QUEEN)
+
+
+func test_auto_cross_off_shows_nothing() -> void:
+	var puzzle := _puzzle("auto-off")
+	var game := QueensGame.new(puzzle, 0, "auto-off")
+	game.auto_cross = false
+	game.apply([[0, _solution_queen(puzzle), QueensRules.QUEEN]])
+	for flag in game.attacked_cells():
+		assert_eq(flag, 0)
+
+
+func test_explain_skips_crosses_already_shown() -> void:
+	var puzzle := _puzzle("auto-explain", 7, 3)
+	var game := QueensGame.new(puzzle, 0, "auto-explain")
+	game.apply([[0, _solution_queen(puzzle), QueensRules.QUEEN]])
+	var result := game.hint_engine().tactical(game)
+	assert_true(result.available)
+	for step in result.steps:
+		assert_false(step.text.begins_with("A queen claims"), "auto-crossed cells are not re-explained")
+	game.auto_cross = false
+	var manual := game.hint_engine().tactical(game)
+	assert_true(manual.steps[0].text.begins_with("A queen claims"), "without auto-cross the crosses are a step")
+
+
 func test_hints_alone_solve_the_puzzle() -> void:
 	var game := QueensGame.new(_puzzle("hints", 7, 3), 1, "hints")
 	HintTestUtil.solve_with_hints(self, game)

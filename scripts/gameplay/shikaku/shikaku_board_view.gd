@@ -11,20 +11,43 @@ func _shikaku() -> ShikakuGame:
 	return game as ShikakuGame
 
 
+func _frame_padding() -> float:
+	return 8.0
+
+
+## Every correctly drawn rectangle, so each new one flashes once.
+func _completed_units() -> Array[PackedInt32Array]:
+	var result: Array[PackedInt32Array] = []
+	var shikaku := game as ShikakuGame
+	if shikaku == null:
+		return result
+	var bounds := ShikakuRules.rects_by_id(shikaku.puzzle, shikaku.channels[0])
+	for id: int in bounds:
+		var rect: Rect2i = bounds[id]
+		if ShikakuRules.rect_ok(shikaku.puzzle, rect):
+			result.append(shikaku.puzzle.rect_cells(rect))
+	return result
+
+
 func _draw_overlay() -> void:
 	var puzzle := _shikaku().puzzle
 	var ids := game.channels[0]
 	var bounds := ShikakuRules.rects_by_id(puzzle, ids)
+	var radius := cell_size() * 0.18
 	for id: int in bounds:
 		var rect: Rect2i = bounds[id]
 		var ok := ShikakuRules.rect_ok(puzzle, rect)
-		var color := accent if ok else DesignTokens.COLOR_ERROR
-		var area := _grid_rect(rect).grow(-DesignTokens.BOARD_LINE * 3)
-		draw_rect(area, Color(color, 0.16))
-		draw_rect(area, Color(color, 0.85), false, DesignTokens.BOARD_LINE_STRONG * 0.6)
+		var area := _grid_rect(rect).grow(-maxf(3.0, cell_size() * 0.05))
+		if ok:
+			var fill: Color = DesignTokens.REGION_COLORS[id % DesignTokens.REGION_COLORS.size()]
+			draw_tile(area.grow(2.0), fill.darkened(0.18), radius + 2.0)
+			draw_tile(area, fill, radius)
+		else:
+			draw_tile(area, Color("#F2CFC9"), radius)
+			draw_rect(area, Color(DesignTokens.COLOR_ERROR, 0.7), false, 3.0)
 	if _has_preview:
-		var area := _grid_rect(_preview).grow(-DesignTokens.BOARD_LINE * 3)
-		draw_rect(area, Color(accent, 0.1))
+		var area := _grid_rect(_preview).grow(-maxf(3.0, cell_size() * 0.05))
+		draw_tile(area, Color(accent, 0.18), radius)
 		draw_rect(area, accent, false, DesignTokens.BOARD_LINE_STRONG * 0.6)
 		var label := "%d × %d = %d" % [_preview.size.x, _preview.size.y, _preview.get_area()]
 		var label_rect := Rect2(area.position.x, area.position.y - cell_size() * 0.5, area.size.x, cell_size() * 0.45)

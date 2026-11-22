@@ -25,6 +25,18 @@ func _init(padding: int = DesignTokens.SPACE_L) -> void:
 	# ignored), so the content height is copied into custom_minimum_size.
 	_margin.minimum_size_changed.connect(_sync_minimum_size)
 	resized.connect(_sync_minimum_size)
+	PressFeedback.attach(self)
+
+
+## Replaces the surface colour (mode tiles, the dark daily card).
+func set_fill(color: Color) -> void:
+	var normal := ThemeFactory.raised(color, DesignTokens.RADIUS_M)
+	var pressed := normal.duplicate() as StyleBoxFlat
+	pressed.bg_color = color.darkened(0.08)
+	for state: StringName in [&"normal", &"hover", &"disabled"]:
+		add_theme_stylebox_override(state, normal)
+	for state: StringName in [&"pressed", &"hover_pressed"]:
+		add_theme_stylebox_override(state, pressed)
 
 
 func _ready() -> void:

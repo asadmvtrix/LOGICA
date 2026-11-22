@@ -4,7 +4,7 @@ extends RefCounted
 ## bitmap icon assets.
 
 enum Direction { LEFT, RIGHT }
-enum Icon { UNDO, REDO, RESET, HINT, EXPLAIN, PAUSE, PLAY, NOTES, ERASE, CHECK, LOCK, CLOSE }
+enum Icon { UNDO, REDO, RESET, HINT, EXPLAIN, PAUSE, PLAY, NOTES, ERASE, CHECK, LOCK, CLOSE, HOME, JOURNEY, DAILY, STATS, SETTINGS }
 
 
 static func draw_chevron(canvas: CanvasItem, center: Vector2, direction: Direction, color: Color) -> void:
@@ -80,6 +80,40 @@ static func draw_icon(canvas: CanvasItem, icon: Icon, center: Vector2, size: flo
 		Icon.CLOSE:
 			canvas.draw_line(center + Vector2(-r * 0.6, -r * 0.6), center + Vector2(r * 0.6, r * 0.6), color, stroke, true)
 			canvas.draw_line(center + Vector2(-r * 0.6, r * 0.6), center + Vector2(r * 0.6, -r * 0.6), color, stroke, true)
+		Icon.HOME:
+			canvas.draw_polyline(PackedVector2Array([
+				center + Vector2(-r, -r * 0.05), center + Vector2(0, -r * 0.95), center + Vector2(r, -r * 0.05)]), color, stroke, true)
+			canvas.draw_polyline(PackedVector2Array([
+				center + Vector2(-r * 0.72, -r * 0.3), center + Vector2(-r * 0.72, r * 0.85),
+				center + Vector2(r * 0.72, r * 0.85), center + Vector2(r * 0.72, -r * 0.3)]), color, stroke, true)
+			canvas.draw_rect(Rect2(center + Vector2(-r * 0.2, r * 0.3), Vector2(r * 0.4, r * 0.55)), color)
+		Icon.JOURNEY:
+			var nodes := [Vector2(-0.75, 0.7), Vector2(0.1, 0.35), Vector2(-0.3, -0.25), Vector2(0.7, -0.7)]
+			var path := PackedVector2Array()
+			for p: Vector2 in nodes:
+				path.append(center + p * r)
+			canvas.draw_polyline(path, color, stroke, true)
+			for p in path:
+				canvas.draw_circle(p, stroke * 1.3, color, true, -1.0, true)
+		Icon.DAILY:
+			var page := Rect2(center - Vector2(r * 0.9, r * 0.75), Vector2(r * 1.8, r * 1.65))
+			canvas.draw_rect(page, color, false, stroke)
+			canvas.draw_rect(Rect2(page.position, Vector2(page.size.x, r * 0.45)), color)
+			for x: float in [-0.45, 0.45]:
+				canvas.draw_line(center + Vector2(x * r, -r * 1.0), center + Vector2(x * r, -r * 0.55), color, stroke, true)
+			canvas.draw_circle(center + Vector2(0, r * 0.35), stroke * 1.4, color, true, -1.0, true)
+		Icon.STATS:
+			var heights := [0.8, 1.5, 1.1]
+			for k in 3:
+				var h: float = heights[k] * r
+				var x := center.x + (k - 1) * r * 0.7 - r * 0.22
+				canvas.draw_rect(Rect2(x, center.y + r * 0.8 - h, r * 0.44, h), color)
+		Icon.SETTINGS:
+			for k in 8:
+				var a := TAU * k / 8.0
+				canvas.draw_line(center + Vector2.from_angle(a) * r * 0.6, center + Vector2.from_angle(a) * r * 0.98, color, stroke * 1.5, true)
+			canvas.draw_arc(center, r * 0.62, 0.0, TAU, 32, color, stroke, true)
+			canvas.draw_arc(center, r * 0.25, 0.0, TAU, 20, color, stroke, true)
 
 
 static func _arrow_head(canvas: CanvasItem, tip: Vector2, direction: Vector2, length: float, color: Color) -> void:

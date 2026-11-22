@@ -44,6 +44,7 @@ func _build() -> void:
 
 func _continue_card(session: PuzzleLaunch) -> CardButton:
 	var card := CardButton.new()
+	card.set_fill(DesignTokens.mode_tint(session.mode).lerp(DesignTokens.COLOR_SURFACE, 0.5))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override(&"separation", DesignTokens.SPACE_M)
 	card.content.add_child(row)
@@ -63,8 +64,9 @@ func _daily_card(today: Dictionary) -> CardButton:
 	var progress := context.progress
 	var day := ProgressionCatalog.date_key(today)
 	var card := CardButton.new()
-	card.content.add_child(UiFactory.caption("Today"))
-	card.content.add_child(UiFactory.label("The daily set", ThemeFactory.LABEL_TITLE))
+	card.set_fill(DesignTokens.COLOR_HERO)
+	card.content.add_child(_hero_label(UiFactory.caption("Today"), true))
+	card.content.add_child(_hero_label(UiFactory.label("The daily set", ThemeFactory.LABEL_HEADLINE), false))
 	var previews := HBoxContainer.new()
 	previews.add_theme_constant_override(&"separation", DesignTokens.SPACE_S)
 	card.content.add_child(UiFactory.spacer(DesignTokens.SPACE_XS))
@@ -77,27 +79,32 @@ func _daily_card(today: Dictionary) -> CardButton:
 	var summary := "%d of 4 solved" % progress.daily_count(day)
 	if streak > 0:
 		summary += " · %d day streak" % streak
-	card.content.add_child(UiFactory.label(summary, ThemeFactory.LABEL_SECONDARY))
+	card.content.add_child(_hero_label(UiFactory.label(summary, ThemeFactory.LABEL_SECONDARY), true))
 	card.pressed.connect(context.router.select_tab.bind(Routes.DAILY))
 	return card
 
 
+func _hero_label(label: Label, secondary: bool) -> Label:
+	label.add_theme_color_override(&"font_color", DesignTokens.COLOR_HERO_INK_SECONDARY if secondary else DesignTokens.COLOR_HERO_INK)
+	return label
+
+
 func _mode_tile(mode: StringName) -> CardButton:
 	var tile := CardButton.new(DesignTokens.SPACE_M)
+	tile.set_fill(DesignTokens.mode_tint(mode))
 	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var preview := ModePreview.new(mode, 200.0)
 	preview.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	tile.content.add_child(preview)
 	tile.content.add_child(UiFactory.spacer(DesignTokens.SPACE_XS))
 	var name_label := UiFactory.label(PuzzleModes.title(mode), ThemeFactory.LABEL_TITLE)
+	name_label.add_theme_color_override(&"font_color", DesignTokens.mode_color(mode).darkened(0.35))
 	tile.content.add_child(name_label)
 	var tagline := UiFactory.paragraph(PuzzleModes.tagline(mode), ThemeFactory.LABEL_SECONDARY)
 	tagline.custom_minimum_size.y = DesignTokens.FONT_SIZE_BODY_SMALL * 2.6
 	tile.content.add_child(tagline)
 	var level := context.progress.next_journey_level(mode)
-	var caption := UiFactory.caption("Level %d" % level)
-	caption.add_theme_color_override(&"font_color", DesignTokens.mode_color(mode))
-	tile.content.add_child(caption)
+	tile.content.add_child(LevelChip.new("Level %d" % level, DesignTokens.mode_color(mode)))
 	tile.pressed.connect(context.router.push.bind(Routes.PLAY, ProgressionCatalog.journey_launch(mode, level)))
 	return tile
 
@@ -123,3 +130,29 @@ class DailyBadge:
 				VectorIcons.draw_icon(mark, VectorIcons.Icon.CHECK, center, 44, DesignTokens.COLOR_SURFACE)
 			)
 			add_child(mark)
+
+
+## Solid pill in the mode colour with the next level number.
+class LevelChip:
+	extends Control
+
+	var text: String
+	var color: Color
+
+	func _init(p_text: String, p_color: Color) -> void:
+		text = p_text
+		color = p_color
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		custom_minimum_size = Vector2(220, 64)
+		size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+
+	func _draw() -> void:
+		var box := StyleBoxFlat.new()
+		box.bg_color = color
+		box.set_corner_radius_all(DesignTokens.RADIUS_PILL)
+		box.anti_aliasing = true
+		draw_style_box(box, Rect2(Vector2.ZERO, size))
+		var font := BoardView.font(DesignTokens.FONT_WEIGHT_SEMIBOLD)
+		var font_size := DesignTokens.FONT_SIZE_CAPTION
+		var baseline := (size.y + font.get_ascent(font_size) - font.get_descent(font_size)) * 0.5
+		draw_string(font, Vector2(0, baseline), text + "  ›", HORIZONTAL_ALIGNMENT_CENTER, size.x, font_size, DesignTokens.COLOR_SURFACE)

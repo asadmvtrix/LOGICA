@@ -31,6 +31,7 @@ var _hint_button: ToolButton
 var _explain_button: ToolButton
 var _notes: ToolButton
 var _notes_mode := false
+var _digit_keys: Array[Button] = []
 var _overlay: ModalOverlay
 var _dirty := false
 var _save_clock := 0.0
@@ -40,6 +41,12 @@ func _build() -> void:
 	launch = context.router.current_params() as PuzzleLaunch
 	if launch == null:
 		launch = ProgressionCatalog.journey_launch(PuzzleModes.QUEENS, 1)
+
+	var backdrop := ColorRect.new()
+	backdrop.color = DesignTokens.mode_tint(launch.mode).lerp(DesignTokens.COLOR_BACKGROUND, 0.4)
+	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(backdrop)
 
 	_column = VBoxContainer.new()
 	_column.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -97,6 +104,7 @@ func _make_header() -> Control:
 	titles.add_theme_constant_override(&"separation", 0)
 	row.add_child(titles)
 	var title := UiFactory.label(PuzzleModes.title(launch.mode), ThemeFactory.LABEL_TITLE)
+	title.add_theme_color_override(&"font_color", DesignTokens.mode_color(launch.mode))
 	titles.add_child(title)
 	titles.add_child(UiFactory.label(launch.subtitle(), ThemeFactory.LABEL_SECONDARY))
 
@@ -148,7 +156,11 @@ func _start(generated: PuzzleGame) -> void:
 	if not saved.is_empty() and not game.load_save(saved):
 		push_warning("Saved session did not match the puzzle; starting fresh.")
 
+	var queens := game as QueensGame
+	if queens != null:
+		queens.auto_cross = context.settings.auto_cross
 	board = PuzzleModes.create_board(game)
+	board.reduce_motion = context.settings.reduced_motion
 	_body.add_child(board)
 
 	_status = UiFactory.paragraph(INSTRUCTIONS.get(launch.mode, ""), ThemeFactory.LABEL_SECONDARY)
@@ -188,6 +200,7 @@ func _make_toolbar() -> Control:
 func _tool(bar: HBoxContainer, caption: String, icon: VectorIcons.Icon, callback: Callable) -> ToolButton:
 	var button := ToolButton.new(caption, icon)
 	button.accent = board.accent
+	PressFeedback.attach(button)
 	button.pressed.connect(callback)
 	bar.add_child(button)
 	return button
@@ -208,7 +221,9 @@ func _make_number_pad() -> Control:
 		key.custom_minimum_size = Vector2(0, DesignTokens.TOUCH_TARGET_MIN)
 		key.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		key.pressed.connect(enter_digit.bind(d))
+		PressFeedback.attach(key)
 		digits.add_child(key)
+		_digit_keys.append(key)
 	var extra := HBoxContainer.new()
 	extra.add_theme_constant_override(&"separation", 0)
 	column.add_child(extra)
@@ -232,7 +247,6 @@ func enter_digit(digit: int) -> void:
 		sudoku.toggle_note(board.selected, digit)
 	else:
 		sudoku.set_digit(board.selected, digit)
-		context.settings.tap_feedback()
 
 
 func _toggle_notes() -> void:
@@ -279,7 +293,6 @@ func _on_hint_applied(result: HintResult) -> void:
 	game.apply(result.changes)
 	if board is SudokuBoardView and not result.changes.is_empty():
 		board.select(result.changes[0][1])
-	context.settings.tap_feedback()
 
 
 func pause() -> void:
@@ -321,12 +334,20 @@ func _restart() -> void:
 
 func _on_game_changed() -> void:
 	_dirty = true
+	context.settings.tap_feedback()
 	_refresh_tools()
 
 
 func _refresh_tools() -> void:
 	_undo.disabled = not game.history.can_undo()
 	_redo.disabled = not game.history.can_redo()
+	if not _digit_keys.is_empty():
+		var counts := PackedInt32Array()
+		counts.resize(10)
+		for v in game.channels[0]:
+			counts[v] += 1
+		for d in range(1, 10):
+			_digit_keys[d - 1].disabled = counts[d] >= 9
 
 
 func _on_completed() -> void:
@@ -340,7 +361,12 @@ func _on_completed() -> void:
 	if context.settings.reduced_motion or not is_inside_tree():
 		_show_completion(outcome)
 	else:
-		get_tree().create_timer(0.9).timeout.connect(_show_completion.bind(outcome))
+		if context.settings.haptics and OS.has_feature("mobile"):
+			Input.vibrate_handheld(40)
+		var mode_color := DesignTokens.mode_color(launch.mode)
+		var palette: Array[Color] = [mode_color, mode_color.lightened(0.35), DesignTokens.COLOR_SUN, DesignTokens.COLOR_MODE_TANGO, DesignTokens.COLOR_MOON]
+		add_child(Confetti.new(palette, launch.key.hash()))
+		get_tree().create_timer(1.1).timeout.connect(_show_completion.bind(outcome))
 
 
 func _show_completion(outcome: Dictionary) -> void:

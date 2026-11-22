@@ -21,6 +21,11 @@ var _counter: Label
 var _previous: Button
 var _next: Button
 var _apply: Button
+var _slide: Tween
+var _rest_top := 0.0
+var _rest_bottom := 0.0
+
+const SLIDE_DISTANCE := 480.0
 
 
 func _init() -> void:
@@ -34,6 +39,8 @@ func _init() -> void:
 	_sheet.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_sheet.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_sheet)
+	_rest_top = _sheet.offset_top
+	_rest_bottom = _sheet.offset_bottom
 
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override(&"separation", DesignTokens.SPACE_S)
@@ -101,11 +108,19 @@ func show_hint(result: HintResult) -> void:
 	else:
 		_kind_label.text = "HINT"
 	_title.text = result.title
+	var was_open := visible
 	visible = true
 	_refresh()
-	if not reduce_motion:
+	if not reduce_motion and not was_open:
+		if _slide != null:
+			_slide.kill()
+		_sheet.offset_top = _rest_top + SLIDE_DISTANCE
+		_sheet.offset_bottom = _rest_bottom + SLIDE_DISTANCE
 		_sheet.modulate.a = 0.0
-		create_tween().tween_property(_sheet, "modulate:a", 1.0, DesignTokens.MOTION_STANDARD)
+		_slide = create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		_slide.tween_property(_sheet, "offset_top", _rest_top, DesignTokens.MOTION_SLOW)
+		_slide.tween_property(_sheet, "offset_bottom", _rest_bottom, DesignTokens.MOTION_SLOW)
+		_slide.tween_property(_sheet, "modulate:a", 1.0, DesignTokens.MOTION_STANDARD)
 
 
 func hide_hint() -> void:

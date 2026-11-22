@@ -15,13 +15,36 @@ func _draw() -> void:
 	super._draw()
 
 
+func _completed_units() -> Array[PackedInt32Array]:
+	var result: Array[PackedInt32Array] = []
+	if game == null:
+		return result
+	var cells := game.channels[0]
+	var conflicts := game.conflicts()
+	for unit in SudokuRules.units():
+		var done := true
+		for cell in unit:
+			if cells[cell] == 0 or conflicts[cell] == 1:
+				done = false
+				break
+		if done:
+			result.append(unit)
+	return result
+
+
+func _frame_padding() -> float:
+	return 10.0
+
+
 func _cell_fill(index: int) -> Color:
 	if selected >= 0 and selected != index:
 		var digit := game.value(selected)
 		if digit != 0 and game.value(index) == digit:
-			return DesignTokens.COLOR_BOARD_SELECTED.lerp(DesignTokens.COLOR_SURFACE, 0.4)
+			return Color(accent, 0.22)
 		if index in SudokuRules.peers(selected):
 			return DesignTokens.COLOR_BOARD_PEER
+	if _sudoku().is_locked(index):
+		return Color(DesignTokens.mode_tint(game.mode_id), 0.5)
 	return Color(0, 0, 0, 0)
 
 

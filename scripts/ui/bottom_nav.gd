@@ -17,7 +17,7 @@ func _init(ids: Array[StringName], labels: Dictionary) -> void:
 	add_child(row)
 
 	for id in ids:
-		var item := NavItem.new(labels[id])
+		var item := NavItem.new(labels[id], ICONS.get(id, VectorIcons.Icon.HOME))
 		item.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		item.pressed.connect(item_selected.emit.bind(id))
 		row.add_child(item)
@@ -36,24 +36,46 @@ func active_id() -> StringName:
 	return &""
 
 
+const ICONS := {
+	&"home": VectorIcons.Icon.HOME,
+	&"journey": VectorIcons.Icon.JOURNEY,
+	&"daily": VectorIcons.Icon.DAILY,
+	&"statistics": VectorIcons.Icon.STATS,
+	&"settings": VectorIcons.Icon.SETTINGS,
+}
+
+
+## Icon over label; the active tab sits on a tinted pill.
 class NavItem:
 	extends Button
+
+	var label_text: String
+	var icon_id: VectorIcons.Icon
+	var _pill := StyleBoxFlat.new()
 
 	var active := false:
 		set(new_value):
 			active = new_value
-			theme_type_variation = ThemeFactory.BUTTON_NAV_ACTIVE if active else ThemeFactory.BUTTON_NAV
 			queue_redraw()
 
-	func _init(label_text: String) -> void:
-		text = label_text
+	func _init(p_label: String, p_icon: VectorIcons.Icon) -> void:
+		label_text = p_label
+		icon_id = p_icon
+		tooltip_text = p_label
 		theme_type_variation = ThemeFactory.BUTTON_NAV
 		mouse_filter = Control.MOUSE_FILTER_PASS
 		custom_minimum_size.y = DesignTokens.TOUCH_TARGET_MIN
+		_pill.bg_color = DesignTokens.mode_tint(&"queens")
+		_pill.set_corner_radius_all(DesignTokens.RADIUS_PILL)
+		_pill.anti_aliasing = true
 
 	func _draw() -> void:
-		if not active:
-			return
-		var indicator := DesignTokens.NAV_INDICATOR_SIZE
-		var rect := Rect2(Vector2((size.x - indicator.x) * 0.5, 0.0), indicator)
-		draw_rect(rect, DesignTokens.COLOR_ACCENT)
+		var icon_center := Vector2(size.x * 0.5, size.y * 0.36)
+		var color := DesignTokens.COLOR_INK if active else DesignTokens.COLOR_INK_MUTED
+		if active:
+			draw_style_box(_pill, Rect2(icon_center - Vector2(68, 30), Vector2(136, 60)))
+		VectorIcons.draw_icon(self, icon_id, icon_center, 66.0, color)
+		var weight := DesignTokens.FONT_WEIGHT_SEMIBOLD if active else DesignTokens.FONT_WEIGHT_MEDIUM
+		var font := BoardView.font(weight)
+		var font_size := DesignTokens.FONT_SIZE_CAPTION
+		draw_string(font, Vector2(0, size.y * 0.82), label_text, HORIZONTAL_ALIGNMENT_CENTER, size.x, font_size, color)

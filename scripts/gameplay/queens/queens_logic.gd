@@ -74,7 +74,7 @@ func solve(max_level: int = MAX_LEVEL) -> int:
 
 
 func next_deduction(max_level: int = MAX_LEVEL) -> Deduction:
-	var found := _queen_eliminations()
+	var found := queen_eliminations()
 	if found == null:
 		found = _last_cell()
 	if found == null and max_level >= 2:
@@ -142,7 +142,7 @@ func _unit_name(kind: String, number: int) -> String:
 
 # --- Techniques -------------------------------------------------------------
 
-func _queen_eliminations() -> Deduction:
+func queen_eliminations() -> Deduction:
 	var queens := PackedInt32Array()
 	for cell in queen.size():
 		if queen[cell] == 1:

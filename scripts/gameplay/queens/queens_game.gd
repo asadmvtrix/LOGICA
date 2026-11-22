@@ -3,6 +3,7 @@ extends PuzzleGame
 ## A Queens puzzle in play. Channel 0 holds 0 empty, 1 marked empty, 2 queen.
 
 var puzzle: QueensPuzzle
+var auto_cross := true
 
 
 func _init(p_puzzle: QueensPuzzle, p_difficulty: int, p_key: String) -> void:
@@ -34,8 +35,33 @@ func hint_engine() -> HintEngine:
 	return QueensHintEngine.new()
 
 
-## Tap cycle: empty -> marked -> queen -> empty.
+## Cells ruled out by a placed queen (same row, column, region or touching).
+## With auto_cross on these show as crosses without being stored as marks.
+func attacked_cells() -> PackedByteArray:
+	var result := PackedByteArray()
+	result.resize(width * height)
+	if not auto_cross:
+		return result
+	var cells := channels[0]
+	for q in cells.size():
+		if cells[q] != QueensRules.QUEEN:
+			continue
+		for cell in cells.size():
+			if cell != q and QueensRules.attacks(puzzle.size, puzzle.regions, q, cell):
+				result[cell] = 1
+	return result
+
+
+func is_auto_crossed(cell: int) -> bool:
+	return value(cell) == QueensRules.EMPTY and attacked_cells()[cell] == 1
+
+
+## Tap cycle: empty -> marked -> queen -> empty. An auto-crossed cell already
+## shows a cross, so a tap goes straight to queen.
 func cycle(cell: int) -> void:
+	if is_auto_crossed(cell):
+		apply([[0, cell, QueensRules.QUEEN]])
+		return
 	apply([[0, cell, (value(cell) + 1) % 3]])
 
 
